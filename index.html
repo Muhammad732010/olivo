@@ -118,6 +118,8 @@ a { color: inherit; text-decoration: none; }
   transition: color .25s, background .25s;
 }
 .tab.on { background: var(--cream); color: var(--olive-900); }
+.tab-orders { display: inline-flex; align-items: center; gap: 6px; color: var(--brass); border: 1px solid rgba(201,161,91,.55); }
+.tab-orders .n { min-width: 20px; height: 20px; border-radius: 10px; padding: 0 6px; display: inline-grid; place-items: center; font-size: 12px; background: var(--brass); color: var(--olive-900); }
 
 /* ==========================================================
    5. МЕНЮ И КАРТОЧКИ
@@ -660,7 +662,8 @@ const byId = id => DISHES.find(d => d.id === +id);
 
 /* --- рисуем меню --- */
 function renderMenu() {
-  $("#tabs").innerHTML = CATS.map(c => `<button class="tab" data-cat="${c}">${t("cats")[c]}</button>`).join("");
+  $("#tabs").innerHTML = `<button class="tab tab-orders" id="ordersTab">${t("myOrder")} <span class="n" id="ordersCount">0</span></button>`
+    + CATS.map(c => `<button class="tab" data-cat="${c}">${t("cats")[c]}</button>`).join("");
   $("#menu").innerHTML = CATS.map(c => `
     <section class="cat" id="cat-${c}">
       <h2>${t("cats")[c]}</h2>
@@ -733,6 +736,7 @@ function totals() {
 function updateCart() {
   const { count, sum } = totals();
   $("#badge").textContent = count;
+  $("#ordersCount").textContent = count;
   $("#barTotal").textContent = money(sum);
   $("#sheetTotal").textContent = money(sum);
   $("#cartbar").classList.toggle("show", count > 0);
@@ -788,6 +792,7 @@ document.addEventListener("click", e => {
     if (plus && !q.closest(".sheet")) toast(`${t("added")}: ${byId(id).name[lang]}`);
     return;
   }
+  if (e.target.closest("#ordersTab")) { openSheet($("#cartSheet")); return; }
   const tab = e.target.closest(".tab");
   if (tab) { $(`#cat-${tab.dataset.cat}`).scrollIntoView({ behavior: "smooth" }); return; }
   const lb = e.target.closest("#langs button");
@@ -811,6 +816,7 @@ $("#sendWaiter").onclick = () => {
 };
 
 $("#sendOrder").onclick = () => {
+  if (!totals().count) return toast(t("empty"));
   const tbl = $("#tableInput").value.trim();
   if (!tbl) return toast(t("needTable"));
   const lines = Object.keys(cart).map(id => `• ${byId(id).name[lang]} × ${cart[id]} — ${money(byId(id).price * cart[id])}`);
