@@ -154,9 +154,6 @@ a { color: inherit; text-decoration: none; }
   background: rgba(28,34,25,.78); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   color: var(--cream); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px;
 }
-.photo .qty { position: absolute; bottom: 8px; inset-inline-end: 8px; background: rgba(28,34,25,.85); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
-.photo .qty.empty { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
-.photo .qty .plus { box-shadow: 0 4px 12px rgba(0,0,0,.35); }
 .info { display: flex; flex-direction: column; flex: 1; padding: 10px 12px 12px; min-width: 0; }
 .info h3 { font-size: 15px; font-weight: 700; line-height: 1.3; }
 .info .desc {
@@ -177,6 +174,15 @@ a { color: inherit; text-decoration: none; }
 .qty .n { min-width: 20px; text-align: center; font-weight: 700; font-size: 14px; }
 .qty.empty .minus, .qty.empty .n { display: none; }
 .qty.empty { background: transparent; }
+/* большая кнопка «Добавить в заказ» на карточке */
+.qty .add { display: none; }
+.qty.big { margin-top: 10px; justify-content: space-between; background: var(--olive-900); }
+.qty.big.empty { background: transparent; }
+.qty.big.empty .add {
+  display: block; width: 100%; height: 38px; border-radius: 999px;
+  font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 10px;
+}
+.qty.big.empty .plus:not(.add) { display: none; }
 .bump { animation: bump .35s ease; }
 @keyframes bump { 40% { transform: scale(1.25); } }
 
@@ -478,7 +484,7 @@ const UI = {
     tagline: "Средиземноморская кухня и гриль", callWaiter: "Позвать официанта",
     myOrder: "Мой заказ", total: "Итого", tableNo: "Номер стола",
     sendOrder: "Отправить заказ в WhatsApp", clear: "Очистить заказ", cancel: "Отмена", call: "Позвать",
-    orderHint: "Официант подтвердит заказ у вашего стола", added: "Добавлено",
+    orderHint: "Официант подтвердит заказ у вашего стола", added: "Добавлено", addToOrder: "Добавить в заказ",
     waiterOn: "Официант скоро подойдёт", needTable: "Укажите номер стола", empty: "Заказ пуст — добавьте блюда кнопкой +",
     footer: "Цены указаны с учётом НДС", contactsTitle: "Как нас найти", address: "Адрес", phoneLabel: "Телефон", bookingLabel: "Бронирование столов", hoursLabel: "Часы работы", hours: "Ежедневно 12:00–23:00", waiterMsg: "Стол {t}: прошу подойти официанта",
     orderMsg: "Заказ, стол {t}", cats: { starters: "Закуски", mains: "Горячее", burgers: "Бургеры и пицца", drinks: "Напитки", desserts: "Десерты" }
@@ -487,7 +493,7 @@ const UI = {
     tagline: "Mediterranean kitchen & grill", callWaiter: "Call a waiter",
     myOrder: "My order", total: "Total", tableNo: "Table number",
     sendOrder: "Send order via WhatsApp", clear: "Clear order", cancel: "Cancel", call: "Call",
-    orderHint: "Your waiter will confirm the order at your table", added: "Added",
+    orderHint: "Your waiter will confirm the order at your table", added: "Added", addToOrder: "Add to order",
     waiterOn: "A waiter is on the way", needTable: "Enter your table number", empty: "Your order is empty — tap + to add dishes",
     footer: "Prices include VAT", contactsTitle: "Find us", address: "Address", phoneLabel: "Phone", bookingLabel: "Table reservations", hoursLabel: "Opening hours", hours: "Daily 12:00–23:00", waiterMsg: "Table {t}: please send a waiter",
     orderMsg: "Order, table {t}", cats: { starters: "Starters", mains: "Mains", burgers: "Burgers & pizza", drinks: "Drinks", desserts: "Desserts" }
@@ -496,7 +502,7 @@ const UI = {
     tagline: "مطبخ متوسطي ومشويات", callWaiter: "استدعاء النادل",
     myOrder: "طلبي", total: "المجموع", tableNo: "رقم الطاولة",
     sendOrder: "إرسال الطلب عبر واتساب", clear: "مسح الطلب", cancel: "إلغاء", call: "استدعاء",
-    orderHint: "سيؤكد النادل طلبك على طاولتك", added: "تمت الإضافة",
+    orderHint: "سيؤكد النادل طلبك على طاولتك", added: "تمت الإضافة", addToOrder: "أضف إلى الطلب",
     waiterOn: "النادل في الطريق إليك", needTable: "أدخل رقم الطاولة", empty: "طلبك فارغ — اضغط + لإضافة الأطباق",
     footer: "الأسعار شاملة ضريبة القيمة المضافة", contactsTitle: "كيف تجدنا", address: "العنوان", phoneLabel: "الهاتف", bookingLabel: "حجز الطاولات", hoursLabel: "ساعات العمل", hours: "يومياً 12:00–23:00", waiterMsg: "الطاولة {t}: الرجاء إرسال نادل",
     orderMsg: "طلب، الطاولة {t}", cats: { starters: "المقبلات", mains: "الأطباق الرئيسية", burgers: "البرغر والبيتزا", drinks: "المشروبات", desserts: "الحلويات" }
@@ -669,12 +675,12 @@ function renderMenu() {
                    onerror="const p=this.parentNode; this.remove(); p.textContent='${d.name.en[0]}'">
             </div>
             <span class="weight">${d.w}</span>
-            ${qtyHTML(d.id)}
           </div>
           <div class="info">
             <h3>${d.name[lang]}</h3>
             <p class="desc">${d.desc[lang]}</p>
             <span class="price">${money(d.price)}</span>
+            ${qtyHTML(d.id, true)}
           </div>
         </article>`).join("")}
       </div>
@@ -682,9 +688,10 @@ function renderMenu() {
   watchSections();
 }
 
-function qtyHTML(id) {
+function qtyHTML(id, withAdd) {
   const n = cart[id] || 0;
-  return `<div class="qty ${n ? "" : "empty"}" data-id="${id}">
+  return `<div class="qty ${n ? "" : "empty"} ${withAdd ? "big" : ""}" data-id="${id}">
+    ${withAdd ? `<button class="plus add">${t("addToOrder")}</button>` : ""}
     <button class="minus" aria-label="−">−</button>
     <span class="n">${n}</span>
     <button class="plus" aria-label="+">+</button>
